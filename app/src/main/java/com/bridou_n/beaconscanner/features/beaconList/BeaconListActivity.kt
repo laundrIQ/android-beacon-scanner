@@ -1,11 +1,13 @@
 package com.bridou_n.beaconscanner.features.beaconList
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
 import android.os.RemoteException
 import android.provider.Settings
 import android.view.Menu
@@ -81,6 +83,8 @@ class BeaconListActivity : AppCompatActivity(), BeaconConsumer {
 	
 	private var numberOfScansSinceLog = 0
 	private var loggingRequests = CompositeDisposable()
+
+	private var wakelock: PowerManager.WakeLock? = null
 	
 	private var isScanning = false
 	
@@ -136,6 +140,7 @@ class BeaconListActivity : AppCompatActivity(), BeaconConsumer {
 		
 		if (prefs.preventSleep) {
 			keepScreenOn(true)
+			enableWakelock()
 		}
 		
 		showScanningState(true)
@@ -146,10 +151,25 @@ class BeaconListActivity : AppCompatActivity(), BeaconConsumer {
 		unbindBeaconManager()
 		showScanningState(false)
 		keepScreenOn(false)
+		releaseWakelock()
 		isScanning = false
 	}
 	
 	fun isScanning() = isScanning
+
+	private fun enableWakelock() {
+		wakelock?.release()
+		wakelock = (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+			newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::MyWakelockTag").apply {
+				acquire()
+			}
+		}
+	}
+
+	private fun releaseWakelock() {
+		wakelock?.release()
+		wakelock = null
+	}
 	
 	private fun unbindBeaconManager() {
 		if (beaconManager?.isBound(this) == true) {
