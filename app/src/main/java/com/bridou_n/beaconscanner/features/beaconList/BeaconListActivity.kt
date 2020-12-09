@@ -206,10 +206,31 @@ class BeaconListActivity : AppCompatActivity(), BeaconConsumer {
 			.start()
 		return true
 	}
+
+	override fun onPause() {
+		prefs.setScanningState(isScanning())
+		keepScreenOn(false)
+		super.onPause()
+	}
+
+	override fun onDestroy() {
+		unbindBeaconManager()
+		listQuery?.dispose()
+		loggingRequests.clear()
+		bluetoothStateDisposable?.dispose()
+		dialog?.dismiss()
+		super.onDestroy()
+	}
 	
 	override fun onResume() {
 		super.onResume()
+
+		unbindBeaconManager()
 		beaconManager = component().providesBeaconManager()
+
+		listQuery?.dispose()
+		loggingRequests.clear()
+		bluetoothStateDisposable?.dispose()
 		
 		observeBluetoothState()
 		listQuery = db.beaconsDao().getBeacons(blocked = false)
@@ -442,20 +463,5 @@ class BeaconListActivity : AppCompatActivity(), BeaconConsumer {
 			else -> return super.onOptionsItemSelected(item)
 		}
 		return true
-	}
-	
-	override fun onPause() {
-		prefs.setScanningState(isScanning())
-		unbindBeaconManager()
-		listQuery?.dispose()
-		loggingRequests.clear()
-		bluetoothStateDisposable?.dispose()
-		keepScreenOn(false)
-		super.onPause()
-	}
-	
-	override fun onDestroy() {
-		dialog?.dismiss()
-		super.onDestroy()
 	}
 }

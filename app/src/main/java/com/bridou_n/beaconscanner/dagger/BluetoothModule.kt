@@ -32,6 +32,7 @@ object BluetoothModule {
 
         // Sets the delay between each scans according to the settings
         instance.foregroundBetweenScanPeriod = prefs.getScanDelay()
+        instance.backgroundBetweenScanPeriod = prefs.getScanDelay()
 
         // Add all the beacon types we want to discover
         instance.beaconParsers.add(BeaconParser().setBeaconLayout(IBEACON_LAYOUT))
